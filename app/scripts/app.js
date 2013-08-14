@@ -3,12 +3,15 @@
 
     function App(options) {
 
-        this.model = new app.Model();
-        this.view = new app.View(this.model);
-        this.controller = new app.Controller(this.view, this.model, options);
+//        this.model = new app.Model();
+//        this.view = new app.View(this.model);
+        this.controller = new app.Controller();
 
         this.controller._init();
+
     }
+
+    var brendApp = new App();
 
 
 })();
