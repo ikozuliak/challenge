@@ -20,6 +20,14 @@ function randomBetween(min, max) {
     return ~~(Math.random() * (max - min + 1) + min);
 }
 
+function scrollX() {
+    return window.pageXOffset || window.document.documentElement.scrollLeft;
+}
+
+function scrollY() {
+    return window.pageYOffset || window.document.documentElement.scrollTop;
+}
+
 window.requestAnimFrame = (function(){
     return  window.requestAnimationFrame       ||
         window.webkitRequestAnimationFrame ||

@@ -37,14 +37,26 @@
             }
         },
 
+        _onMouseMove : function(event) {
+
+            event.preventDefault();
+
+            this.mouse.x = event.pageX - ( scrollX() + this.canvas.getBoundingClientRect().left );
+            this.mouse.y = event.pageY - ( scrollY() + this.canvas.getBoundingClientRect().top );
+        },
+
         _init:function () {
-            this._initEvents();
+
             this._initCanvas();
+            this._initEvents();
 
         },
 
         _initEvents:function () {
 
+            var self = this;
+
+            this.canvas.addEventListener('mousemove', function(event) { self._onMouseMove.call(self, event) }, false);
         },
 
         _initCanvas:function () {
@@ -53,7 +65,7 @@
             this.canvas = document.createElement('canvas');
 
             this.canvas.width = innerWidth;
-            this.canvas.height = 500;
+            this.canvas.height = 600;
 
             slideshowContainer.appendChild(this.canvas);
 
@@ -115,12 +127,12 @@
             }
 
 
-            this._createTextParticles();
+            this._createShapeParticles();
             this._renderLoop();
 
         },
 
-        _generateText : function(){
+        _generateText:function () {
             this.context.font = 100 + 'px Arial, sans-serif';
             this.context.fillStyle = 'rgb(255, 255, 255)';
             this.context.textAlign = 'center';
@@ -129,6 +141,7 @@
 
             this.context.fillText(sentence, this.canvas.width * 0.5, this.canvas.height - 50);
         },
+
 
         _grabParticlesFromCanvas:function () {
 
@@ -155,6 +168,25 @@
 
             return this.nextText.length;
 
+        },
+
+        _createShapeParticles:function () {
+
+            var self = this;
+
+            var img = new Image();
+            var surface;
+
+
+            img.onload = function () {
+
+                self.context.drawImage(img, self.canvas.width/2 - 60, 30);
+
+                self._createTextParticles();
+            }
+
+
+            img.src = "bottle.png";
         },
 
         _createTextParticles:function (seed) {
@@ -229,8 +261,8 @@
 
                 else {
 
-                    particle.x += ((mouse.x + Math.sin(particle.angle) * 30) - particle.x) * 0.08;
-                    particle.y += ((mouse.y + Math.cos(particle.angle) * 30) - particle.y) * 0.08;
+                    particle.x += ((self.mouse.x + Math.sin(particle.angle) * 30) - particle.x) * 0.08;
+                    particle.y += ((self.mouse.y + Math.cos(particle.angle) * 30) - particle.y) * 0.08;
 
                 }
 
@@ -249,8 +281,8 @@
 
                 else {
 
-                    self.text[index].x += ((mouse.x + Math.sin(particle.angle) * 30) - self.text[index].x) * 0.08;
-                    self.text[index].y += ((mouse.y + Math.cos(particle.angle) * 30) - self.text[index].y) * 0.08;
+                    self.text[index].x += ((self.mouse.x + Math.sin(particle.angle) * 30) - self.text[index].x) * 0.08;
+                    self.text[index].y += ((self.mouse.y + Math.cos(particle.angle) * 30) - self.text[index].y) * 0.08;
 
                 }
 
@@ -309,30 +341,31 @@
 
             });
 
-            [].forEach.call(this.text, function(particle, index) {
+            [].forEach.call(this.text, function (particle, index) {
 
                 particle.alpha += (particle.maxAlpha - particle.alpha) * 0.05;
 
-                if(particle.hasBorn) {
+                if (particle.hasBorn) {
 
                     particle.radius += (0 - particle.radius) * particle.bornSpeed;
 
-                    if(Math.round(particle.radius) === 0)
+                    if (Math.round(particle.radius) === 0)
 
                         particle.hasBorn = false;
 
                 }
 
-                if(!particle.hasBorn) {
+                if (!particle.hasBorn) {
 
                     particle.radius += (particle.maxRadius - particle.radius) * particle.bornSpeed;
 
-                    if(Math.round(particle.radius) === particle.maxRadius)
+                    if (Math.round(particle.radius) === particle.maxRadius)
 
                         particle.hasBorn = true;
 
                 }
 
+                distanceTo(self.mouse, particle) <= particle.radius + 20 ? particle.interactive = true : particle.interactive = false;
 
             });
 
@@ -342,23 +375,13 @@
 
             var context = this.context;
 
-            [].forEach.call(this.particles, function (particle, index) {
+
+
+            [].forEach.call(this.text, function (particle, index) {
 
                 context.save();
                 context.globalAlpha = particle.alpha;
                 context.fillStyle = particle.color;
-                context.beginPath();
-                context.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
-                context.fill();
-                context.restore();
-
-            });
-
-            [].forEach.call(this.text, function(particle, index) {
-
-                context.save();
-                context.globalAlpha = particle.alpha;
-                context.fillStyle = 'rgb(255, 255, 255)';
                 context.beginPath();
                 context.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
                 context.fill();
