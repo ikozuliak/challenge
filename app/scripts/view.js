@@ -64,7 +64,8 @@
                 this.mouse.x = event.pageX - ( scrollX() + this.canvas.getBoundingClientRect().left );
                 this.mouse.y = event.pageY - ( scrollY() + this.canvas.getBoundingClientRect().top );
 
-                this._drawPath();
+                if(this.data.drawing)
+                    this._drawPath();
             },
 
             _onClick:function (event) {
@@ -190,8 +191,10 @@
 
                             generated.push({
 
-                                x:width,
-                                y:height,
+                                x:randomBetween(-this.canvas.width, this.canvas.width*2),
+                                y:randomBetween(0, 500),
+                                x1:width,
+                                y1:height,
 
                                 hasBorn:hasBorn,
 
@@ -199,11 +202,12 @@
                                 bornSpeed:0.07 + Math.random() * 0.07,
 
                                 alpha:0,
-                                maxAlpha:0.7 + Math.random() * 0.4,
+                                maxAlpha:0.4 + Math.random() * 0.4,
 
                                 radius:radius,
                                 maxRadius:this.data.shape.radius.max || 8,
                                 orbit:8,
+                                angle: 0.1,
 
                                 color:color,
                                 interactive:false
@@ -258,29 +262,23 @@
                 var self = this;
 
 
-                [].forEach.call(this.particles.coords, function (particle, index) {
+                [].forEach.call(this.particles.all, function(particle, index) {
 
-                    if (!particle.interactive) {
+                    if(particle.interactive) {
 
-                        self.particles.all[index].x += ((particle.x + Math.cos(particle.angle + index) * particle.orbit) - self.particles[index].x) * 0.08;
-                        self.particles.all[index].y += ((particle.y + Math.sin(particle.angle + index) * particle.orbit) - self.particles[index].y) * 0.08;
+                        particle.x += ((self.mouse.x + Math.sin(particle.angle) * 30) - particle.x) * 0.08;
+//                        particle.x += ((particle.x1 + Math.cos(particle.angle + index) * particle.orbit) - particle.x) * 0.08;
+                        particle.y += ((self.mouse.y + Math.sin(particle.angle) * 30) - particle.y) * 0.08;
 
                     }
 
+                    else{
+                        particle.x += ((particle.x1 + Math.sin(particle.angle) * 2) - particle.x) * 0.08;
+                        particle.y += ((particle.y1 + Math.sin(particle.angle) * 2) - particle.y) * 0.08;
+                    }
 
                     particle.angle += 0.08;
-
-                });
-
-                if (this.swapText.length < this.particles.length) {
-
-                    var extra = [].slice.call(this.particles, this.swapText.length, this.particles.length);
-
-                    for (var index = 0; index < extra.length; index++)
-
-                        this.particles.splice(index, 1);
-
-                }
+                })
 
             },
 
@@ -289,7 +287,7 @@
 
                 var self = this;
 
-//              this._updateTransition();
+              this._updateTransition();
 
                 this.particles.all = this.particles.shape.concat(this.particles.text, this.particles.path);
 
@@ -321,10 +319,14 @@
                 });
 
                 [].forEach.call(this.particles.shape, function (particle, index) {
-                    if (distanceTo(self.mouse, particle) <= 5) {
+
+                    if (distanceTo(self.mouse, particle) <= 5 && (self.data.drawing == true)) {
                         self.particles.path = [];
                         self.pathStarted = self.pathFinished = false;
                     }
+                    else
+                        distanceTo(self.mouse, particle) <= particle.radius + 30 ? particle.interactive = true : particle.interactive = false;
+
                 });
 
             },

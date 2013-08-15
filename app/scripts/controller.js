@@ -9,6 +9,8 @@
 
         this.options = extendObject(this.defaultsSwap, options);
 
+        this.stepIndex = 0;
+
     }
 
     Controller.prototype = {
@@ -24,7 +26,6 @@
             var self = this;
 
             var data = {
-                currentStep : 0,
                 steps : [
                     {
                         text : 'cola zero',
@@ -36,7 +37,8 @@
                             }
                         },
                         density: 4,
-                        fontSize: 100
+                        fontSize: 100,
+                        drawing: false
                     },
                     {
                         text : 'Maze game',
@@ -48,7 +50,8 @@
                             }
                         },
                         density: 7,
-                        fontSize: 80
+                        fontSize: 80,
+                        drawing: true
                     },
                     {
                         text : 'Like us!',
@@ -60,17 +63,26 @@
                             }
                         },
                         density: 4,
-                        fontSize: 80
+                        fontSize: 80,
+                        drawing: false
                     }
 
                 ]
             }
 
-            this.view.canvasExtension._init(data.steps[0]);
+            this.view.canvasExtension._init(data.steps[this.stepIndex]);
 
-            document.body.addEventListener('click', function (event) {
-                self.view.canvasExtension._goTo(data.steps[2]);
-            }, false);
+
+                [].forEach.call(
+                document.body.querySelectorAll('[data-toggle="step"]'),
+                function (ev) {
+                    ev.addEventListener('click', function () {
+                            self.stepIndex += parseInt(ev.getAttribute('data-index'))  ;
+
+                            self.view.canvasExtension._goTo(data.steps[self.stepIndex]);
+                        }
+                    );
+                })
         }
 
 
