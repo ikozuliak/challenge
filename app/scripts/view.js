@@ -5,24 +5,30 @@
 
         this.View
             = '<div class="row">'
-            +   '<a href="#" data-id="{{id}}">{{name}}</a>'
+            + '<a href="#" data-id="{{id}}">{{name}}</a>'
             + '</div>';
 
     }
 
-    View.prototype  = {
+    View.prototype = {
 
-        self : this,
+        self:this,
 
-        canvasExtension : {
+        canvasExtension:{
 
-            mouse : { x:-99999, y:-99999 },
-            particles : [],
-            shape: {},
-            swapText : [],
-            colors: ['#fff', '#e13123'],
+            mouse:{ x:-99999, y:-99999 },
+            particles:{
+                shape:[],
+                text:[],
+                path:[],
+                all:[]
+            },
 
-            _init : function(data){
+            shape:{},
+            swapText:[],
+            colors:['#fff', '#e13123'],
+
+            _init:function (data) {
 
                 this.data = data
 
@@ -45,52 +51,34 @@
                 this._initEvents();
             },
 
-            _onMouseMove : function(event) {
+            _goTo:function (data) {
+                this.data = data;
+
+                this._refresh();
+            },
+
+            _onMouseMove:function (event) {
 
                 event.preventDefault();
 
                 this.mouse.x = event.pageX - ( scrollX() + this.canvas.getBoundingClientRect().left );
                 this.mouse.y = event.pageY - ( scrollY() + this.canvas.getBoundingClientRect().top );
 
-                this.particles.push({
-
-                    x:this.mouse.x,
-                    y:this.mouse.y,
-
-                    hasBorn:true,
-
-                    ease:0.04 + Math.random() * 0.06,
-                    bornSpeed:0.07 + Math.random() * 0.07,
-
-                    alpha:0,
-                    maxAlpha:0.7 + Math.random() * 0.4,
-
-                    radius:20,
-                    maxRadius:5,
-
-                    color:'#fff',
-                    interactive:false
-
-                });
+                this._drawPath();
             },
 
-            _onClick : function(event) {
+            _onClick:function (event) {
 
                 event.preventDefault();
 
-
             },
 
-            _draw: function(){
-
-            },
-
-
-            _onWindowResize : function(){
+            _onWindowResize:function () {
                 this.canvas.width = window.innerWidth;
 
-                this.swapText = [];
+                this.particles.all = [];
                 this._createShapeParticles();
+                this._createTextParticles();
             },
 
             _initEvents:function () {
@@ -98,8 +86,14 @@
                 var self = this;
 
                 window.onresize = this._onWindowResize.bind(this);
-                this.canvas.addEventListener('mousemove', function(event) { self._onMouseMove.call(self, event) }, false);
-                this.canvas.addEventListener('click', function(event) { self._onClick.call(self, event) }, false);
+
+                this.canvas.addEventListener('mousemove', function (event) {
+                    self._onMouseMove.call(self, event)
+                }, false);
+
+//                this.canvas.addEventListener('click', function (event) {
+//                    self._onClick.call(self, event)
+//                }, false);
             },
 
             _createParticles:function () {
@@ -107,8 +101,61 @@
                 var self = this;
 
                 this._createShapeParticles();
+                this._createTextParticles();
                 this._renderLoop();
 
+            },
+
+            _refresh: function() {
+
+                this.particles = {
+                    shape:[],
+                    text:[],
+                    path:[],
+                    all:[]
+                };
+
+                this._clear();
+
+                this._createShapeParticles();
+                this._createTextParticles();
+            },
+
+            _drawPath:function () {
+
+                if (this.pathStarted && this.pathFinished) {
+                    this.pathStarted = this.pathFinished = false;
+                    alert('ui');
+                }
+
+                if ((this.mouse.x > this.imgX + 20 && this.mouse.x < this.imgX + 40) && (this.mouse.y > this.imgY && this.mouse.y < this.imgY + 20))
+                    this.pathStarted = true;
+
+                if ((this.mouse.x > this.imgX2 - 20 && this.mouse.x < this.imgX2) && (this.mouse.y > this.imgY2 - 40 && this.mouse.y < this.imgY2 - 20))
+                    this.pathFinished = true;
+
+                if (this.mouse.x > this.imgX && this.mouse.x < this.imgX2)
+
+                    this.particles.path.push({
+
+                        x:this.mouse.x,
+                        y:this.mouse.y,
+
+                        hasBorn:true,
+
+                        ease:0.04 + Math.random() * 0.06,
+                        bornSpeed:0.07 + Math.random() * 0.07,
+
+                        alpha:0,
+                        maxAlpha:0.7 + Math.random() * 0.4,
+
+                        radius:12,
+                        maxRadius:5,
+
+                        color:'#fff',
+                        interactive:false
+
+                    });
             },
 
             _generateText:function () {
@@ -124,22 +171,24 @@
 
             _grabParticlesFromCanvas:function () {
 
+                var generated = [];
+
                 var surface = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
 
-                for (var width = 0; width < surface.width; width += 7) {
+                for (var width = 0; width < surface.width; width += this.data.density) {
 
-                    for (var height = 0; height < surface.height; height += 7) {
+                    for (var height = 0; height < surface.height; height += this.data.density) {
 
                         var color = surface.data[(height * surface.width * 4) + (width * 4) - 1];
 
                         if (color === 255) {
 
-                            var radius = randomBetween(0, 12);
+                            var radius = randomBetween(this.data.shape.radius.min, 30);
                             var hasBorn = radius > 0 || radius < 12 ? false : true;
 
                             var color = this.colors[~~(Math.random() * this.colors.length)];
 
-                            this.particles.push({
+                            generated.push({
 
                                 x:width,
                                 y:height,
@@ -153,7 +202,8 @@
                                 maxAlpha:0.7 + Math.random() * 0.4,
 
                                 radius:radius,
-                                maxRadius:4,
+                                maxRadius:this.data.shape.radius.max || 8,
+                                orbit:8,
 
                                 color:color,
                                 interactive:false
@@ -162,66 +212,40 @@
 
                         }
                     }
-
                 }
 
-                return this.swapText.length;
+                return generated;
 
             },
 
             _createShapeParticles:function () {
 
                 var self = this;
-
-                var img = new Image();
                 var surface;
 
+                self.img = new Image();
 
-                img.onload = function () {
 
-                    self.context.drawImage(img, self.canvas.width/2 - img.width/2, 30);
+                self.img.onload = function () {
 
-                    self._createTextParticles();
+                    self.imgX = self.canvas.width / 2 - self.img.width / 2;
+                    self.imgX2 = self.imgX + self.img.width;
+                    self.imgY = 30;
+                    self.imgY2 = self.imgY + self.img.height;
+
+                    self.context.drawImage(self.img, self.imgX, 30);
+
+                    self.particles.shape = self._grabParticlesFromCanvas();
+                    self._clear();
                 }
 
-                img.src = this.data.shape;
+                self.img.src = this.data.shape.src;
             },
 
             _createTextParticles:function () {
 
                 this._generateText();
-                var seed = this._grabParticlesFromCanvas();
-
-//                for (var quantity = 0, len = seed; quantity < len; quantity++) {
-//
-//                    var radius = randomBetween(0, 12);
-//                    var hasBorn = radius > 0 || radius < 12 ? false : true;
-//
-//                    var color = this.colors[~~(Math.random() * this.colors.length)];
-//
-//                    this.particles.push({
-//
-//                        x:this.swapText[quantity].x,
-//                        y:this.swapText[quantity].y,
-//
-//                        hasBorn:hasBorn,
-//
-//                        ease:0.04 + Math.random() * 0.06,
-//                        bornSpeed:0.07 + Math.random() * 0.07,
-//
-//                        alpha:0,
-//                        maxAlpha:0.7 + Math.random() * 0.4,
-//
-//                        radius:radius,
-//                        maxRadius:4,
-//
-//                        color:color,
-//                        interactive:false
-//
-//                    });
-//
-//                }
-
+                this.particles.text = this._grabParticlesFromCanvas();
 
             },
 
@@ -234,34 +258,29 @@
                 var self = this;
 
 
-//                [].forEach.call(this.particles, function (particle, index) {
-//
-//                    if (!self.particles[index].interactive) {
-//
-//                        self.particles[index].y += ((particle.y + Math.sin(particle.angle + index) * particle.orbit) - self.particles[index].y) * 0.08;
-//
-//                    }
-//
-//                    else {
-//
-//                        self.particles[index].x += ((self.mouse.x + Math.sin(particle.angle) * 30) - self.particles[index].x) * 0.08;
-//                        self.particles[index].y += ((self.mouse.y + Math.cos(particle.angle) * 30) - self.particles[index].y) * 0.08;
-//
-//                    }
-//
-//                    particle.angle += 0.08;
-//
-//                });
+                [].forEach.call(this.particles.coords, function (particle, index) {
 
-//                if(this.swapText.length < this.particles.length) {
-//
-//                    var extra = [].slice.call(this.particles, this.swapText.length, this.particles.length);
-//
-//                    for(var index = 0; index < extra.length; index++)
-//
-//                        this.particles.splice(index, 1);
-//
-//                }
+                    if (!particle.interactive) {
+
+                        self.particles.all[index].x += ((particle.x + Math.cos(particle.angle + index) * particle.orbit) - self.particles[index].x) * 0.08;
+                        self.particles.all[index].y += ((particle.y + Math.sin(particle.angle + index) * particle.orbit) - self.particles[index].y) * 0.08;
+
+                    }
+
+
+                    particle.angle += 0.08;
+
+                });
+
+                if (this.swapText.length < this.particles.length) {
+
+                    var extra = [].slice.call(this.particles, this.swapText.length, this.particles.length);
+
+                    for (var index = 0; index < extra.length; index++)
+
+                        this.particles.splice(index, 1);
+
+                }
 
             },
 
@@ -270,10 +289,11 @@
 
                 var self = this;
 
-//                this._updateTransition();
+//              this._updateTransition();
 
+                this.particles.all = this.particles.shape.concat(this.particles.text, this.particles.path);
 
-                [].forEach.call(this.particles, function (particle, index) {
+                [].forEach.call(this.particles.all, function (particle, index) {
 
                     particle.alpha += (particle.maxAlpha - particle.alpha) * 0.05;
 
@@ -297,13 +317,15 @@
 
                     }
 
-                    if(distanceTo(self.mouse, particle) <= 1)
-                        {
-                            console.log('collision')
-                        }
 
+                });
 
-                })
+                [].forEach.call(this.particles.shape, function (particle, index) {
+                    if (distanceTo(self.mouse, particle) <= 5) {
+                        self.particles.path = [];
+                        self.pathStarted = self.pathFinished = false;
+                    }
+                });
 
             },
 
@@ -312,7 +334,7 @@
                 var context = this.context;
 
 
-                [].forEach.call(this.particles, function (particle, index) {
+                [].forEach.call(this.particles.all, function (particle, index) {
 
                     context.save();
                     context.globalAlpha = particle.alpha;
@@ -336,7 +358,6 @@
             }
         }
     }
-
 
 
     window.app.View = View;
