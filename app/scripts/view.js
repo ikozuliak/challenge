@@ -8,11 +8,20 @@
             + '<a href="#" data-id="{{id}}">{{name}}</a>'
             + '</div>';
 
+        this.navItem
+            = '<li>'
+            + '<a href="#">{{index}} - {{title}}</a>'
+            + '</li>';
+
     }
 
     View.prototype = {
 
         self:this,
+
+        _buildNavigation:function (data, container) {
+
+        },
 
         canvasExtension:{
 
@@ -28,18 +37,20 @@
             swapText:[],
             colors:['#fff', '#e13123'],
 
-            _init:function (data) {
+            _init:function (data, step) {
 
-                this.data = data
+                this.storage = data;
 
-                var canvasContainer = document.querySelector('#canvas-stage');
+                this.data = this.storage.steps[step];
+
+                this.canvasContainer = document.querySelector('#canvas-stage');
 
                 this.canvas = document.createElement('canvas');
 
-                this.canvas.width = innerWidth;
-                this.canvas.height = 600;
+                this.canvas.width = this.canvasContainer.offsetWidth;
+                this.canvas.height = this.canvasContainer.offsetHeight;
 
-                canvasContainer.appendChild(this.canvas);
+                this.canvasContainer.appendChild(this.canvas);
 
                 if (!!(this.canvas.getContext && this.canvas.getContext('2d'))) {
 
@@ -49,10 +60,13 @@
                 }
 
                 this._initEvents();
+
+                return this.canvas;
+
             },
 
-            _goTo:function (data) {
-                this.data = data;
+            _goTo:function (step) {
+                this.data = this.storage.steps[step];
 
                 this._refresh();
             },
@@ -64,7 +78,7 @@
                 this.mouse.x = event.pageX - ( scrollX() + this.canvas.getBoundingClientRect().left );
                 this.mouse.y = event.pageY - ( scrollY() + this.canvas.getBoundingClientRect().top );
 
-                if(this.data.drawing)
+                if (this.data.drawing)
                     this._drawPath();
             },
 
@@ -72,10 +86,11 @@
 
                 event.preventDefault();
 
+                window.open(this.data.url);
             },
 
             _onWindowResize:function () {
-                this.canvas.width = window.innerWidth;
+                this.canvas.width = this.canvasContainer.offsetWidth;
 
                 this.particles.all = [];
                 this._createShapeParticles();
@@ -92,9 +107,13 @@
                     self._onMouseMove.call(self, event)
                 }, false);
 
-//                this.canvas.addEventListener('click', function (event) {
-//                    self._onClick.call(self, event)
-//                }, false);
+                if (this.data.url) {
+                    document.body.style.cursor = "pointer";
+                    this.canvas.addEventListener('click', function (event) {
+                        self._onClick.call(self, event)
+                    }, false);
+                }
+
             },
 
             _createParticles:function () {
@@ -107,7 +126,7 @@
 
             },
 
-            _refresh: function() {
+            _refresh:function () {
 
                 this.particles = {
                     shape:[],
@@ -120,38 +139,41 @@
 
                 this._createShapeParticles();
                 this._createTextParticles();
+
+                this._initEvents();
             },
 
             _drawPath:function () {
 
                 if (this.pathStarted && this.pathFinished) {
                     this.pathStarted = this.pathFinished = false;
-                    alert('ui');
+                    this._goTo(3);
                 }
 
-                if ((this.mouse.x > this.imgX + 20 && this.mouse.x < this.imgX + 40) && (this.mouse.y > this.imgY && this.mouse.y < this.imgY + 20))
+                if ((this.mouse.x > this.imgX + 110 && this.mouse.x < this.imgX + 130) && (this.mouse.y > this.imgY && this.mouse.y < this.imgY + 20))
                     this.pathStarted = true;
 
                 if ((this.mouse.x > this.imgX2 - 20 && this.mouse.x < this.imgX2) && (this.mouse.y > this.imgY2 - 40 && this.mouse.y < this.imgY2 - 20))
                     this.pathFinished = true;
 
-                if (this.mouse.x > this.imgX && this.mouse.x < this.imgX2)
+                if ((this.mouse.x > this.imgX && this.mouse.x < this.imgX2) && (this.mouse.y > this.imgY && this.mouse.y < this.imgY2) && (this.pathStarted))
 
                     this.particles.path.push({
 
                         x:this.mouse.x,
                         y:this.mouse.y,
-
+                        x1:this.mouse.x,
+                        y1:this.mouse.y,
                         hasBorn:true,
 
-                        ease:0.04 + Math.random() * 0.06,
-                        bornSpeed:0.07 + Math.random() * 0.07,
+                        ease:0.9 + Math.random() * 0.06,
+                        bornSpeed:0.4 + Math.random() * 0.07,
 
                         alpha:0,
-                        maxAlpha:0.7 + Math.random() * 0.4,
+                        maxAlpha:0.3 + Math.random() * 0.4,
 
-                        radius:12,
-                        maxRadius:5,
+                        radius:4,
+                        maxRadius:2,
 
                         color:'#fff',
                         interactive:false
@@ -160,13 +182,22 @@
             },
 
             _generateText:function () {
-                this.context.font = 100 + 'px Arial, sans-serif';
+                this.context.font = this.data.fontSize + 'px Arial, sans-serif';
                 this.context.fillStyle = 'rgb(255, 255, 255)';
                 this.context.textAlign = 'center';
 
-                var sentence = this.data.text.toUpperCase().split('').join(String.fromCharCode(8202));
+                var text = this.data.text.toUpperCase();
 
-                this.context.fillText(sentence, this.canvas.width * 0.5, this.canvas.height - 50);
+                this.context.fillText(text, this.canvas.width * 0.5, this.canvas.height - 70);
+
+                if (this.data.textSmall) {
+
+                    this.context.font = this.data.fontSize - 30 + 'px Arial, sans-serif';
+
+                    var textSmall = this.data.textSmall.toUpperCase();
+
+                    this.context.fillText(textSmall, this.canvas.width * 0.5, this.canvas.height - 10);
+                }
             },
 
 
@@ -191,7 +222,7 @@
 
                             generated.push({
 
-                                x:randomBetween(-this.canvas.width, this.canvas.width*2),
+                                x:randomBetween(-this.canvas.width, this.canvas.width * 2),
                                 y:randomBetween(0, 500),
                                 x1:width,
                                 y1:height,
@@ -207,7 +238,7 @@
                                 radius:radius,
                                 maxRadius:this.data.shape.radius.max || 8,
                                 orbit:8,
-                                angle: 0.1,
+                                angle:0.1,
 
                                 color:color,
                                 interactive:false
@@ -261,24 +292,32 @@
 
                 var self = this;
 
+                if (!self.data.drawing)
+                    [].forEach.call(this.particles.all, function (particle, index) {
 
-                [].forEach.call(this.particles.all, function(particle, index) {
+                        if (particle.interactive) {
 
-                    if(particle.interactive) {
+                            particle.x += ((self.mouse.x + Math.sin(particle.angle) * 60) - particle.x) * 0.08;
+                            particle.y += ((self.mouse.y + Math.sin(particle.angle) * 60) - particle.y) * 0.08;
 
-                        particle.x += ((self.mouse.x + Math.sin(particle.angle) * 30) - particle.x) * 0.08;
-//                        particle.x += ((particle.x1 + Math.cos(particle.angle + index) * particle.orbit) - particle.x) * 0.08;
-                        particle.y += ((self.mouse.y + Math.sin(particle.angle) * 30) - particle.y) * 0.08;
+                        }
 
-                    }
+                        else {
+                            particle.x += ((particle.x1 + Math.sin(particle.angle) * 2) - particle.x) * 0.08;
+                            particle.y += ((particle.y1 + Math.sin(particle.angle) * 2) - particle.y) * 0.08;
+                        }
 
-                    else{
-                        particle.x += ((particle.x1 + Math.sin(particle.angle) * 2) - particle.x) * 0.08;
-                        particle.y += ((particle.y1 + Math.sin(particle.angle) * 2) - particle.y) * 0.08;
-                    }
+                        particle.angle += randomBetween(1, 8) / 100;
+                    })
+                else
+                    [].forEach.call(this.particles.all, function (particle, index) {
 
-                    particle.angle += 0.08;
-                })
+                        particle.x = particle.x1;
+                        particle.y = particle.y1;
+
+
+                        particle.angle += randomBetween(1, 8) / 100;
+                    })
 
             },
 
@@ -287,7 +326,7 @@
 
                 var self = this;
 
-              this._updateTransition();
+                this._updateTransition();
 
                 this.particles.all = this.particles.shape.concat(this.particles.text, this.particles.path);
 
@@ -321,11 +360,15 @@
                 [].forEach.call(this.particles.shape, function (particle, index) {
 
                     if (distanceTo(self.mouse, particle) <= 5 && (self.data.drawing == true)) {
-                        self.particles.path = [];
+                        if (self.pathStarted) {
+                            self.particles.path = [];
+                            self._createShapeParticles();
+                        }
+
                         self.pathStarted = self.pathFinished = false;
                     }
                     else
-                        distanceTo(self.mouse, particle) <= particle.radius + 30 ? particle.interactive = true : particle.interactive = false;
+                        distanceTo(self.mouse, particle) <= particle.radius + 60 ? particle.interactive = true : particle.interactive = false;
 
                 });
 
