@@ -30,7 +30,7 @@
                     },
                     {
                         text : 'cola zero2',
-                        shape : 'bottle.png'
+                        shape : 'maze.png'
                     }
 
                 ]
