@@ -40,13 +40,12 @@
             _init:function (data, step) {
 
                 this.storage = data;
-
                 this.data = this.storage.steps[step];
+                this.step = step;
 
                 this.canvasContainer = document.querySelector('#canvas-stage');
 
                 this.canvas = document.createElement('canvas');
-
                 this.canvas.width = this.canvasContainer.offsetWidth;
                 this.canvas.height = this.canvasContainer.offsetHeight;
 
@@ -57,15 +56,19 @@
                     this.context = this.canvas.getContext('2d');
 
                     this._createParticles();
+
+                    document.body.style.cursor = "pointer";
+
+                    this._initEvents();
+
+                    return this.canvas;
+
                 }
-
-                this._initEvents();
-
-                return this.canvas;
 
             },
 
             _goTo:function (step) {
+                this.step = step;
                 this.data = this.storage.steps[step];
 
                 this._refresh();
@@ -86,7 +89,11 @@
 
                 event.preventDefault();
 
-                window.open(this.data.url);
+                if (this.data.url)
+                    window.open(this.data.url);
+
+                else if (!this.data.blocked)
+                    this._goTo(this.step + 1);
             },
 
             _onWindowResize:function () {
@@ -107,12 +114,10 @@
                     self._onMouseMove.call(self, event)
                 }, false);
 
-                if (this.data.url) {
-                    document.body.style.cursor = "pointer";
-                    this.canvas.addEventListener('click', function (event) {
-                        self._onClick.call(self, event)
-                    }, false);
-                }
+                this.canvas.addEventListener('click', function (event) {
+                    self._onClick.call(self, event)
+                }, false);
+
 
             },
 
@@ -140,44 +145,37 @@
                 this._createShapeParticles();
                 this._createTextParticles();
 
-                this._initEvents();
             },
 
             _drawPath:function () {
 
                 if (this.pathStarted && this.pathFinished) {
                     this.pathStarted = this.pathFinished = false;
-                    this._goTo(3);
+                    this._goTo(4);
                 }
 
                 if ((this.mouse.x > this.imgX + 110 && this.mouse.x < this.imgX + 130) && (this.mouse.y > this.imgY && this.mouse.y < this.imgY + 20))
                     this.pathStarted = true;
 
-                if ((this.mouse.x > this.imgX2 - 20 && this.mouse.x < this.imgX2) && (this.mouse.y > this.imgY2 - 40 && this.mouse.y < this.imgY2 - 20))
+                if ((this.mouse.x > this.imgX2 - 110 && this.mouse.x < this.imgX2 - 90) && (this.mouse.y > this.imgY2 - 40 && this.mouse.y < this.imgY2 - 20))
                     this.pathFinished = true;
 
                 if ((this.mouse.x > this.imgX && this.mouse.x < this.imgX2) && (this.mouse.y > this.imgY && this.mouse.y < this.imgY2) && (this.pathStarted))
 
                     this.particles.path.push({
-
                         x:this.mouse.x,
                         y:this.mouse.y,
                         x1:this.mouse.x,
                         y1:this.mouse.y,
                         hasBorn:true,
-
-                        ease:0.9 + Math.random() * 0.06,
-                        bornSpeed:0.4 + Math.random() * 0.07,
-
-                        alpha:0,
-                        maxAlpha:0.3 + Math.random() * 0.4,
-
-                        radius:4,
+                        ease:1,
+                        bornSpeed:0,
+                        alpha:1,
+                        maxAlpha:1,
+                        radius:2,
                         maxRadius:2,
-
                         color:'#fff',
                         interactive:false
-
                     });
             },
 
@@ -188,15 +186,20 @@
 
                 var text = this.data.text.toUpperCase();
 
-                this.context.fillText(text, this.canvas.width * 0.5, this.canvas.height - 70);
+                this.context.fillText(
+                    text,
+                    this.canvas.width * 0.5,
+                    this.canvas.height - 70
+                );
 
                 if (this.data.textSmall) {
 
-                    this.context.font = this.data.fontSize - 30 + 'px Arial, sans-serif';
+                    this.context.font = this.data.fontSize - 25 + 'px Arial, sans-serif';
 
-                    var textSmall = this.data.textSmall.toUpperCase();
-
-                    this.context.fillText(textSmall, this.canvas.width * 0.5, this.canvas.height - 10);
+                    this.context.fillText(
+                        this.data.textSmall.toUpperCase(),
+                        this.canvas.width * 0.5, this.canvas.height - 10
+                    );
                 }
             },
 
@@ -215,34 +218,28 @@
 
                         if (color === 255) {
 
-                            var radius = randomBetween(this.data.shape.radius.min, 30);
+                            var radius = getRandom(this.data.shape.radius.min, 30);
                             var hasBorn = radius > 0 || radius < 12 ? false : true;
 
                             var color = this.colors[~~(Math.random() * this.colors.length)];
 
                             generated.push({
 
-                                x:randomBetween(-this.canvas.width, this.canvas.width * 2),
-                                y:randomBetween(0, 500),
+                                x:getRandom(-this.canvas.width, this.canvas.width * 2),
+                                y:getRandom(0, 500),
                                 x1:width,
                                 y1:height,
-
                                 hasBorn:hasBorn,
-
                                 ease:0.04 + Math.random() * 0.06,
                                 bornSpeed:0.07 + Math.random() * 0.07,
-
                                 alpha:0,
                                 maxAlpha:0.4 + Math.random() * 0.4,
-
                                 radius:radius,
                                 maxRadius:this.data.shape.radius.max || 8,
                                 orbit:8,
                                 angle:0.1,
-
                                 color:color,
                                 interactive:false
-
                             });
 
                         }
@@ -260,7 +257,6 @@
 
                 self.img = new Image();
 
-
                 self.img.onload = function () {
 
                     self.imgX = self.canvas.width / 2 - self.img.width / 2;
@@ -269,8 +265,8 @@
                     self.imgY2 = self.imgY + self.img.height;
 
                     self.context.drawImage(self.img, self.imgX, 30);
-
                     self.particles.shape = self._grabParticlesFromCanvas();
+
                     self._clear();
                 }
 
@@ -307,7 +303,7 @@
                             particle.y += ((particle.y1 + Math.sin(particle.angle) * 2) - particle.y) * 0.08;
                         }
 
-                        particle.angle += randomBetween(1, 8) / 100;
+                        particle.angle += getRandom(1, 8) / 100;
                     })
                 else
                     [].forEach.call(this.particles.all, function (particle, index) {
@@ -316,11 +312,10 @@
                         particle.y = particle.y1;
 
 
-                        particle.angle += randomBetween(1, 8) / 100;
+                        particle.angle += getRandom(1, 8) / 100;
                     })
 
             },
-
 
             _update:function () {
 
@@ -328,7 +323,11 @@
 
                 this._updateTransition();
 
-                this.particles.all = this.particles.shape.concat(this.particles.text, this.particles.path);
+                this.particles.all =
+                    this.particles.shape.concat(
+                    this.particles.text,
+                    this.particles.path
+                );
 
                 [].forEach.call(this.particles.all, function (particle, index) {
 
@@ -343,8 +342,7 @@
                             particle.hasBorn = false;
 
                     }
-
-                    if (!particle.hasBorn) {
+                    else {
 
                         particle.radius += (particle.maxRadius - particle.radius) * particle.bornSpeed;
 
@@ -353,7 +351,6 @@
                             particle.hasBorn = true;
 
                     }
-
 
                 });
 
@@ -378,7 +375,6 @@
 
                 var context = this.context;
 
-
                 [].forEach.call(this.particles.all, function (particle, index) {
 
                     context.save();
@@ -398,8 +394,8 @@
                 this._clear();
                 this._update();
                 this._render();
-                requestAnimFrame(this._renderLoop.bind(this));
 
+                requestAnimFrame(this._renderLoop.bind(this));
             }
         }
     }

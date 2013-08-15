@@ -16,7 +16,7 @@ function distanceTo(pointA, pointB) {
     return Math.sqrt(dx * dx + dy * dy);
 }
 
-function randomBetween(min, max) {
+function getRandom(min, max) {
     return ~~(Math.random() * (max - min + 1) + min);
 }
 
@@ -33,6 +33,6 @@ window.requestAnimFrame = (function(){
         window.webkitRequestAnimationFrame ||
         window.mozRequestAnimationFrame    ||
         function( callback ){
-            window.setTimeout(callback, 1000 / 30);
+            window.setTimeout(callback, 1000 / 60);
         };
 })();
