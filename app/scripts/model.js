@@ -10,8 +10,8 @@
                     shape:{
                         src:'bottle.png',
                         radius:{
-                            max:10,
-                            min:2
+                            max:5,
+                            min:0
                         }
                     },
                     density:4,
@@ -23,11 +23,11 @@
                     shape:{
                         src:'sugar.png',
                         radius:{
-                            max:5,
+                            max:6,
                             min:2
                         }
                     },
-                    density:3,
+                    density:4,
                     fontSize:90,
                     drawing:false
                 },
@@ -42,6 +42,11 @@
                     },
                     density:3,
                     fontSize:90,
+                    drawing:false
+                },
+                {
+                    text:'',
+                    video:'ozVQ4IJd2Po',
                     drawing:false
                 },
                 {
@@ -61,7 +66,7 @@
                 },
                 {
                     text:'Like us!',
-                    url:'http://google.com',
+                    url:'https://www.facebook.com/cocacolazero',
                     shape:{
                         src:'like.png',
                         radius:{

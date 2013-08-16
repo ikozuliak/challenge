@@ -62,7 +62,6 @@
                     this._initEvents();
 
                     return this.canvas;
-
                 }
 
             },
@@ -85,16 +84,6 @@
                     this._drawPath();
             },
 
-            _onClick:function (event) {
-
-                event.preventDefault();
-
-                if (this.data.url)
-                    window.open(this.data.url);
-
-                else if (!this.data.blocked)
-                    this._goTo(this.step + 1);
-            },
 
             _onWindowResize:function () {
                 this.canvas.width = this.canvasContainer.offsetWidth;
@@ -113,11 +102,6 @@
                 this.canvas.addEventListener('mousemove', function (event) {
                     self._onMouseMove.call(self, event)
                 }, false);
-
-                this.canvas.addEventListener('click', function (event) {
-                    self._onClick.call(self, event)
-                }, false);
-
 
             },
 
