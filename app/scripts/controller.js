@@ -10,7 +10,7 @@
 
         this.options = extendObject(this.defaultsSwap, options);
 
-        this.stepIndex = 1;
+        this.stepIndex = 0;
 
     }
 
@@ -64,7 +64,7 @@
                 player = new YT.Player('player', {
                     height:self.canvas.height,
                     width:self.canvas.width,
-                    videoId:self.data.steps[self.stepIndex - 1].video,
+                    videoId:self.data.steps[self.stepIndex+1].video,
                     events:{
                         'onReady':onPlayerReady,
                         'onStateChange':onPlayerStateChange
@@ -79,7 +79,9 @@
             function onPlayerStateChange(event) {
 
                 if (event.data === 0) {
-                    self.view.canvasExtension._goTo(self.stepIndex++);
+                    self.view.canvasExtension._goTo(self.stepIndex+1);
+                    self.stepIndex = self.view.canvasExtension._getIndex();
+
                     self._toggleYouTubePlayer();
                 }
             }
@@ -105,16 +107,17 @@
 
             event.preventDefault();
 
+            this.stepIndex = this.view.canvasExtension._getIndex();
+
             if (this.data.steps[this.stepIndex].url)
                 window.open(this.data.steps[this.stepIndex].url);
 
-            else if (this.data.steps[this.stepIndex].video) {
+            else if (this.data.steps[this.stepIndex+1].video) {
                 this._initYouTubePlayer();
-                this.stepIndex++;
             }
 
-            else if (!this.data.steps[this.stepIndex - 1].blocked)
-                this.view.canvasExtension._goTo(this.stepIndex++);
+            else if (!this.data.steps[this.stepIndex].blocked)
+                this.view.canvasExtension._goTo(this.stepIndex);
 
 
         }

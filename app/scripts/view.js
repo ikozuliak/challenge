@@ -3,6 +3,8 @@
 
     function View() {
         var self = this;
+
+        this.step = 0;
     }
 
     View.prototype = {
@@ -51,10 +53,14 @@
             },
 
             _goTo:function (step) {
-                this.step = step;
-                this.data = this.storage.steps[step];
+                this.step = step + 1;
+                this.data = this.storage.steps[this.step];
 
                 this._refresh();
+            },
+
+            _getIndex:function () {
+                return this.step;
             },
 
             _onMouseMove:function (event) {
@@ -119,7 +125,7 @@
 
                 if (this.pathStarted && this.pathFinished) {
                     this.pathStarted = this.pathFinished = false;
-                    this._goTo(5);
+                    this._goTo(4);
                 }
 
                 if ((this.mouse.x > this.imgX + 110 && this.mouse.x < this.imgX + 130) &&
@@ -292,9 +298,9 @@
 
                 this.particles.all =
                     this.particles.shape.concat(
-                    this.particles.text,
-                    this.particles.path
-                );
+                        this.particles.text,
+                        this.particles.path
+                    );
 
                 [].forEach.call(this.particles.all, function (particle, index) {
 
@@ -365,6 +371,7 @@
 
 
     window.app.View = View;
-})(window);
+})
+    (window);
 
 
