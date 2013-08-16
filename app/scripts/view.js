@@ -2,26 +2,10 @@
     'use strict';
 
     function View() {
-
-        this.View
-            = '<div class="row">'
-            + '<a href="#" data-id="{{id}}">{{name}}</a>'
-            + '</div>';
-
-        this.navItem
-            = '<li>'
-            + '<a href="#">{{index}} - {{title}}</a>'
-            + '</li>';
-
+        var self = this;
     }
 
     View.prototype = {
-
-        self:this,
-
-        _buildNavigation:function (data, container) {
-
-        },
 
         canvasExtension:{
 
@@ -135,16 +119,19 @@
 
                 if (this.pathStarted && this.pathFinished) {
                     this.pathStarted = this.pathFinished = false;
-                    this._goTo(4);
+                    this._goTo(5);
                 }
 
-                if ((this.mouse.x > this.imgX + 110 && this.mouse.x < this.imgX + 130) && (this.mouse.y > this.imgY && this.mouse.y < this.imgY + 20))
+                if ((this.mouse.x > this.imgX + 110 && this.mouse.x < this.imgX + 130) &&
+                    (this.mouse.y > this.imgY && this.mouse.y < this.imgY + 20))
                     this.pathStarted = true;
 
-                if ((this.mouse.x > this.imgX2 - 110 && this.mouse.x < this.imgX2 - 90) && (this.mouse.y > this.imgY2 - 40 && this.mouse.y < this.imgY2 - 20))
+                if ((this.mouse.x > this.imgX2 - 110 && this.mouse.x < this.imgX2 - 90) &&
+                    (this.mouse.y > this.imgY2 - 40 && this.mouse.y < this.imgY2 - 20))
                     this.pathFinished = true;
 
-                if ((this.mouse.x > this.imgX && this.mouse.x < this.imgX2) && (this.mouse.y > this.imgY && this.mouse.y < this.imgY2) && (this.pathStarted))
+                if ((this.mouse.x > this.imgX && this.mouse.x < this.imgX2) &&
+                    (this.mouse.y > this.imgY && this.mouse.y < this.imgY2) && (this.pathStarted))
 
                     this.particles.path.push({
                         x:this.mouse.x,
@@ -276,12 +263,9 @@
                     [].forEach.call(this.particles.all, function (particle, index) {
 
                         if (particle.interactive) {
-
                             particle.x += ((self.mouse.x + Math.sin(particle.angle) * 60) - particle.x) * 0.08;
                             particle.y += ((self.mouse.y + Math.sin(particle.angle) * 60) - particle.y) * 0.08;
-
                         }
-
                         else {
                             particle.x += ((particle.x1 + Math.sin(particle.angle) * 2) - particle.x) * 0.08;
                             particle.y += ((particle.y1 + Math.sin(particle.angle) * 2) - particle.y) * 0.08;
@@ -294,7 +278,6 @@
 
                         particle.x = particle.x1;
                         particle.y = particle.y1;
-
 
                         particle.angle += getRandom(1, 8) / 100;
                     })
@@ -318,11 +301,8 @@
                     particle.alpha += (particle.maxAlpha - particle.alpha) * 0.05;
 
                     if (particle.hasBorn) {
-
                         particle.radius += (0 - particle.radius) * particle.bornSpeed;
-
                         if (Math.round(particle.radius) === 0)
-
                             particle.hasBorn = false;
 
                     }
@@ -331,7 +311,6 @@
                         particle.radius += (particle.maxRadius - particle.radius) * particle.bornSpeed;
 
                         if (Math.round(particle.radius) === particle.maxRadius)
-
                             particle.hasBorn = true;
 
                     }

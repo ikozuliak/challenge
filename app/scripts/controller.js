@@ -32,19 +32,23 @@
 
             var self = this;
 
-            document.querySelector('[data-toggle="demo"]').addEventListener('click', function () {
-                    self._startDemo();
-                }
-            );
+            [].forEach.call(
+                document.body.querySelectorAll('[data-toggle="demo"]'),
+                function (ev) {
+                    ev.addEventListener('click', function () {
+                            self._startDemo();
+                        }
+                    );
+                });
         },
 
-        _toggleYouTubePlayer: function(){
+        _toggleYouTubePlayer:function () {
             document.querySelector('#canvas-stage').style.display = 'block';
             document.querySelector('#player').style.display = 'none';
 
         },
 
-        _initYouTubePlayer: function(){
+        _initYouTubePlayer:function () {
 
             var self = this;
             var player;
@@ -56,14 +60,14 @@
 
             document.querySelector('#canvas-stage').style.display = 'none';
 
-            window.onYouTubeIframeAPIReady = function() {
+            window.onYouTubeIframeAPIReady = function () {
                 player = new YT.Player('player', {
-                    height: self.canvas.height,
-                    width: self.canvas.width,
-                    videoId: self.data.steps[self.stepIndex-1].video,
-                    events: {
-                        'onReady': onPlayerReady,
-                        'onStateChange': onPlayerStateChange
+                    height:self.canvas.height,
+                    width:self.canvas.width,
+                    videoId:self.data.steps[self.stepIndex - 1].video,
+                    events:{
+                        'onReady':onPlayerReady,
+                        'onStateChange':onPlayerStateChange
                     }
                 });
             }
@@ -74,7 +78,7 @@
 
             function onPlayerStateChange(event) {
 
-                if(event.data === 0) {
+                if (event.data === 0) {
                     self.view.canvasExtension._goTo(self.stepIndex++);
                     self._toggleYouTubePlayer();
                 }
@@ -95,17 +99,16 @@
                 self._onCanvasClick.call(self, event)
             }, false);
 
-
         },
 
         _onCanvasClick:function (event) {
 
             event.preventDefault();
 
-            if (this.data.url)
+            if (this.data.steps[this.stepIndex].url)
                 window.open(this.data.steps[this.stepIndex].url);
 
-            else if (this.data.steps[this.stepIndex].video){
+            else if (this.data.steps[this.stepIndex].video) {
                 this._initYouTubePlayer();
                 this.stepIndex++;
             }
